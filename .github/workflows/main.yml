@@ -45,10 +45,18 @@ jobs:
         run: |
           codesign -s 'Developer ID Application: Bart Jacobs (6C42VUP45N)' -vvvv --options runtime helloworld.app
       
+      - name: Install Apple ID password
+        env:
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+        run: xcrun notarytool store-credentials APPLE_ID_PASSWORD
+               --apple-id "bart.a.jacobs@gmail.com"
+               --team-id 6C42VUP45N
+               --password "$APPLE_ID_PASSWORD"
+
       - name: Notarize app bundle
         run: |
           zip -r helloworld-unstaped.zip helloworld.app
-          xcrun notarytool submit helloworld.zip --keychain-profile APPLE_ID_PASSWORD --wait
+          xcrun notarytool submit helloworld-unstapled.zip --keychain-profile APPLE_ID_PASSWORD --wait
           xcrun stapler staple helloworld.app
           zip -r helloworld.zip helloworld.app
 
