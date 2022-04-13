@@ -42,7 +42,8 @@ jobs:
           security list-keychain -d user -s $KEYCHAIN_PATH
 
       - name: Sign app bundle
-        run: codesign -s 'Developer ID Application: Bart Jacobs (6C42VUP45N)' -vvvv --options runtime helloworld.app
+        run: |
+          codesign -s 'Developer ID Application: Bart Jacobs (6C42VUP45N)' -vvvv --options runtime helloworld.app
       
       - name: Notarize app bundle
         run: |
