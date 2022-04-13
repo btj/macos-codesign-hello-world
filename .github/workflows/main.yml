@@ -41,17 +41,12 @@ jobs:
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
-      - uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin' # See 'Supported distributions' for available options
-          java-version: '17'
-
       - name: Build shell
-        run: javac MyShell.java
+        run: gcc -o myshell myshell.c
 
       - name: Sign app bundle
         run: |
-          java MyShell codesign -s 'Developer ID Application: Bart Jacobs (6C42VUP45N)' -vvvv --options runtime helloworld.app
+          myshell "codesign -s 'Developer ID Application: Bart Jacobs (6C42VUP45N)' -vvvv --options runtime helloworld.app"
       
       - name: Install Apple ID password
         env:
