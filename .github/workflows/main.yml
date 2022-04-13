@@ -1,0 +1,58 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build app bundle
+        run: |
+          mkdir -p helloworld.app/Contents/MacOS
+          gcc -o helloworld.app/Contents/MacOS/helloworld helloworld.c
+      
+      - name: Install the Apple certificate
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # import certificate and provisioning profile from secrets
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+
+          # create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+      - name: Sign app bundle
+        run: codesign -s 'Developer ID Application: Bart Jacobs (6C42VUP45N)' -vvvv --options runtime helloworld.app
+      
+      - name: Notarize app bundle
+        run: |
+          zip -r helloworld-unstaped.zip helloworld.app
+          xcrun notarytool submit helloworld.zip --keychain-profile APPLE_ID_PASSWORD --wait
+          xcrun stapler staple helloworld.app
+          zip -r helloworld.zip helloworld.app
+
+      - name: Upload zipped app bundle as artifact
+        uses: actions/upload-artifact@v3.0.0
+        with:
+          name: Release
+          path: helloworld.zip
