@@ -46,7 +46,7 @@ jobs:
 
       - name: Sign app bundle
         run: |
-          myshell "codesign -s 'Developer ID Application: Bart Jacobs (6C42VUP45N)' -vvvv --options runtime helloworld.app"
+          ./myshell "codesign -s 'Developer ID Application: Bart Jacobs (6C42VUP45N)' -vvvv --options runtime helloworld.app"
       
       - name: Install Apple ID password
         env:
