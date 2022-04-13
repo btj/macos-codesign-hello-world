@@ -55,7 +55,7 @@ jobs:
 
       - name: Notarize app bundle
         run: |
-          zip -r helloworld-unstaped.zip helloworld.app
+          zip -r helloworld-unstapled.zip helloworld.app
           xcrun notarytool submit helloworld-unstapled.zip --keychain-profile APPLE_ID_PASSWORD --wait
           xcrun stapler staple helloworld.app
           zip -r helloworld.zip helloworld.app
